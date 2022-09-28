@@ -1,6 +1,7 @@
 import base64
 import json
 import os
+import time
 from flask import Flask, request, jsonify
 
 app = Flask(__name__)
@@ -38,13 +39,13 @@ def setTime():
     alarmAlarmKey = [key for key in cabinetSettingJson["0x7C"]]
     alarmActiveKey = [key for key in cabinetSettingJson["0x7B"]]
     alarmStateKey = [key for key in cabinetSettingJson["0x7F"]]
-    alarmNowTimeKey = [key for key in cabinetSettingJson["0x7E"]]
+    #alarmNowTimeKey = [key for key in cabinetSettingJson["0x7E"]]
     alarmLEDKey = [key for key in cabinetSettingJson["0x6B"]]
 
     requestAlarmCheckKey = ["morningTime", "noonTime", "eveningTime", "nightTime"]
     requestActiveCheckKey = ["morningActive", "noonActive", "eveningActive", "nightActive"]
     requestStateCheckKey = ["morningState", "noonState", "eveningState", "nightState"]
-    requestNowTimeCheckKey = ["nowHour", "nowMinute", "nowSecond"]
+    #requestNowTimeCheckKey = ["nowHour", "nowMinute", "nowSecond"]
     requestLEDCheckKey = ["firstLEDState", "secondLEDState", "thirdLEDState", "fourthLEDState", "fifthLEDState", "sixthLEDState", "seventhLEDState"]
 
     for i in alarmAlarmKey :
@@ -62,10 +63,12 @@ def setTime():
             checkResult = False
             returnAlarmResult = "there is wrong setting"
 
+    '''
     for i in alarmNowTimeKey :
         if i not in requestNowTimeCheckKey :
             checkResult = False
             returnAlarmResult = "there is wrong setting"
+    '''
     
     for i in alarmLEDKey :
         if i not in requestLEDCheckKey :
@@ -86,10 +89,16 @@ def setTime():
         for i in alarmStateKey :
             if i in requestStateCheckKey :                
                 alarmDict["0x7F"][i] = int(cabinetSettingJson["0x7F"][i])
+
+        alarmDict["0x7E"]["nowHour"] = int(time.strftime('%H'))
+        alarmDict["0x7E"]["nowMinute"] = int(time.strftime('%M'))
+        alarmDict["0x7E"]["nowSecond"] = int(time.strftime('%S'))
         
+        '''
         for i in alarmNowTimeKey :
             if i in requestNowTimeCheckKey :                
                 alarmDict["0x7E"][i] = int(cabinetSettingJson["0x7E"][i])
+        '''
 
         for i in alarmLEDKey :
             if i in requestLEDCheckKey :                
