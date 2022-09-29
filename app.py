@@ -7,7 +7,7 @@ from flask import Flask, request, jsonify
 app = Flask(__name__)
 
 global alarmDict 
-alarmDict = {"0x7C" : {}, "0x7B" : {}, "0x7F" : {}, "0x7E" : {}, "0x6B" : {}}
+alarmDict = {"0x7C" : {}, "0x7B" : {}, "0x7F" : {}, "0x7E" : {}, "0x6B" : {}, "0x6C" : {}}
 
 global stateDict 
 stateDict ={}
@@ -41,12 +41,15 @@ def setTime():
     alarmStateKey = [key for key in cabinetSettingJson["0x7F"]]
     #alarmNowTimeKey = [key for key in cabinetSettingJson["0x7E"]]
     alarmLEDKey = [key for key in cabinetSettingJson["0x6B"]]
+    alarmStartKey = [key for key in cabinetSettingJson["0x6C"]]
 
     requestAlarmCheckKey = ["morningTime", "noonTime", "eveningTime", "nightTime"]
     requestActiveCheckKey = ["morningActive", "noonActive", "eveningActive", "nightActive"]
     requestStateCheckKey = ["morningState", "noonState", "eveningState", "nightState"]
     #requestNowTimeCheckKey = ["nowHour", "nowMinute", "nowSecond"]
     requestLEDCheckKey = ["firstLEDState", "secondLEDState", "thirdLEDState", "fourthLEDState", "fifthLEDState", "sixthLEDState", "seventhLEDState"]
+    requestStartCheckKey = ["alarmStart"]
+    
 
     for i in alarmAlarmKey :
         if i not in requestAlarmCheckKey :
@@ -103,6 +106,10 @@ def setTime():
         for i in alarmLEDKey :
             if i in requestLEDCheckKey :                
                 alarmDict["0x6B"][i] = int(cabinetSettingJson["0x6B"][i])
+
+        for i in alarmStartKey :
+            if i in requestStartCheckKey :
+                alarmDict["0x6C"][i] = int(cabinetSettingJson["0x6C"][i])
        
                                 
         for key in alarmDict:
