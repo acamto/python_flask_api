@@ -3,6 +3,7 @@ import json
 import os
 import time
 from flask import Flask, request, jsonify
+from flask_mqtt import Mqtt
 
 app = Flask(__name__)
 
@@ -15,7 +16,47 @@ stateDict ={}
 global checkNum
 checkNum = 0
 
+app.config['MQTT_BROKER_URL'] = '192.168.0.25'
+app.config['MQTT_BROKER_PORT'] = 1883
+app.config['MQTT_USERNAME'] = ''  
+app.config['MQTT_PASSWORD'] = '' 
+app.config['MQTT_KEEPALIVE'] = 5  
+app.config['MQTT_TLS_ENABLED'] = False  
+topic = '/flask/mqtt'
 
+mqtt_client = Mqtt(app)
+
+@mqtt_client.on_connect()
+def handle_connect(client, userdata, flags, rc):
+    if rc == 0:
+        print('Connected successfully')
+        mqtt_client.subscribe(topic) # subscribe topic
+    else:
+        print('Bad connection. Code:', rc)
+
+
+@mqtt_client.on_message()
+def handle_mqtt_message(client, userdata, message):
+    global checkNum
+    checkNum += 1
+    data = dict(
+        topic=message.topic,
+        payload=message.payload.decode()
+    )
+    print('Received message on topic: {topic} with payload: {payload}'.format(**data))
+    print('message check : ' + str(checkNum))
+
+
+@app.route('/publish', methods=['POST'])
+def publish_message():
+    request_data = request.get_json()
+    publish_result = mqtt_client.publish(request_data['topic'], request_data['msg'])
+    return jsonify({'code': publish_result[0]})
+
+
+
+
+'''
 @app.route('/')
 def hello_world():
     return 'Hello, healthall '
@@ -66,12 +107,6 @@ def setTime():
             checkResult = False
             returnAlarmResult = "there is wrong setting"
 
-    '''
-    for i in alarmNowTimeKey :
-        if i not in requestNowTimeCheckKey :
-            checkResult = False
-            returnAlarmResult = "there is wrong setting"
-    '''
     
     for i in alarmLEDKey :
         if i not in requestLEDCheckKey :
@@ -97,12 +132,6 @@ def setTime():
         alarmDict["0x7E"]["nowMinute"] = int(time.strftime('%M'))
         alarmDict["0x7E"]["nowSecond"] = int(time.strftime('%S'))
         
-        '''
-        for i in alarmNowTimeKey :
-            if i in requestNowTimeCheckKey :                
-                alarmDict["0x7E"][i] = int(cabinetSettingJson["0x7E"][i])
-        '''
-
         for i in alarmLEDKey :
             if i in requestLEDCheckKey :                
                 alarmDict["0x6B"][i] = int(cabinetSettingJson["0x6B"][i])
@@ -139,6 +168,7 @@ def commandCabinet() :
         print(commandSet[i])
 
     if commandSet["value"] == "setCommand" :
+        print(json.dumps(alarmDict, ensure_ascii=False))
         return json.dumps(alarmDict, ensure_ascii=False)
 
 @app.route('/setState', methods=['POST'])
@@ -167,17 +197,6 @@ def stateCabinet() :
         for i in setKey :
             if i in requestSetCheckKey :
                 stateDict[i] = int(cabinetState[i])
-                '''
-                alarmDict[i + "_hour"] = bytes([int(cabinetSettingJson[i].split(":")[0])])
-                alarmDict[i + "_minute"] = bytes([int(cabinetSettingJson[i].split(":")[1])])
-                '''
-                '''
-                print(i + "hour : " + str(alarmDict[i + "hour"]) 
-                + "--> Type : " + type(alarmDict[i + "hour"]) + "\n" 
-                + i + "minute : " + str(alarmDict[i + "minute"]) 
-                + "--> Type : " + type(alarmDict[i + "minute"]))
-                '''
-                # print(alarmDict)
         
         for key in stateDict:
             print("key: {}, value: {}, type :{}".format(key, stateDict[key], type(stateDict[key])))
@@ -185,6 +204,17 @@ def stateCabinet() :
         print("worng request")
 
     return returnSetResult
+
+@app.route('/setTakeState', methods=['POST'])
+def setTakeState() :
+    print("set Cabinet take Status")
+    requestSetStateKey = ['TAG', 'dosing number', 'alarm hour', 'alarm minutes', 'taking hour', 'taking minutes']
+    print(request.is_json)
+    pillTakeState = request.get_json()
+    print(pillTakeState)
+    return 1
+
+    
 
 @app.route('/testMessage', methods=['POST'])
 def testMessage() :
@@ -195,5 +225,6 @@ def testMessage() :
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0")
-
-
+'''
+if __name__ == '__main__':
+    app.run(host='127.0.0.1', port=5000)
