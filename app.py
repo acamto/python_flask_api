@@ -43,8 +43,36 @@ def handle_mqtt_message(client, userdata, message):
         topic=message.topic,
         payload=message.payload.decode()
     )
+    deviceInfo = ["type", "Model", "deviceID"]
+    takenum = ["takenum-1", "takenum-2", "takenum-3", "takenum-4"]
+    takenumState = ["set-time", "act", "takeinfo", "event-time"]
+    pillboxLEDState = ["pos-1", "pos-2", "pos-3", "pos-4", "pos-5", "pos-6", "pos-7"]
+    pillboxInfo = ["pillbox-info", "next-pillbox"]
+
+    values = json.loads(data['payload'])
     print('Received message on topic: {topic} with payload: {payload}'.format(**data))
+    print()
+    print('value type : ' + str(type(values)))
+    print('json to dic : ' + str(values))
+
+    for i in deviceInfo :
+        print(i + " : " + values[i])
+    print()
+
+    for i in takenum :
+        for j in takenumState :
+            print(i + " => " + j + " : " + values[i][j])
+    print()
+
+    for i in pillboxInfo :
+        if (i == pillboxInfo[0]) :
+            for j in pillboxLEDState :
+                print(i + " => " + j + " : " + values[i][j])
+        else :
+            print(i + " : " + values[i])
+    print()
     print('message check : ' + str(checkNum))
+    print()
 
 
 @app.route('/publish', methods=['POST'])
